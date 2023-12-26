@@ -27,7 +27,7 @@ public class Main {
     private static final CredentialProperties credentialProperty = new CredentialProperties();
     private static DynamoDB dynamoDB = null;
 
-    public static void main(String[] args) {
+    public static void handler() {
         //create DynamoDB client
         AmazonDynamoDB ddbClient = createClient();
         DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
@@ -51,7 +51,7 @@ public class Main {
         JsonParser parser = null;
         try {
             parser = new JsonFactory()
-                    .createParser(new File("src/jobsInfo.json"));
+                    .createParser(new File("jobsInfo.json"));
             JsonNode rootNode = new ObjectMapper().readTree(parser);
             Iterator<JsonNode> iter = rootNode.iterator();
             ObjectNode currentNode;
