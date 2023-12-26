@@ -38,4 +38,4 @@ build/
 .DS_Store
 
 ###project files###
-JobSeeker/src/main/java/org/example/CredentialProperties.java
+src/main/java/org/example/CredentialProperties.java
