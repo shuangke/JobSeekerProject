@@ -1,70 +1,139 @@
 package org.example;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.model.*;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
+
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.*;
 
 public class Main {
 
-    private static final String region = "us-west-2";
+    private static final Region region = Region.US_WEST_2;
     private static final CredentialProperties credentialProperty = new CredentialProperties();
-    private static DynamoDB dynamoDB = null;
+
+    private static DynamoDbClient ddbClient = null;
+
+    private static final String tableName = "Jobs";
+    public static void main(String[] args) {
+        handler();
+    }
 
     public static void handler() {
-        //create DynamoDB client
-        AmazonDynamoDB ddbClient = createClient();
-        DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
-        dynamoDB = new DynamoDB(ddbClient);
-        //create Jobs table
-        String tableName = "Jobs";
-        Table table = createTable(tableName);
-        insertItemsByUsingFile(table);
+        createDDBClient();
+        String filePath = "/Users/shuangke/Desktop/code/projects/JobSeekerProject/JobSeeker/src/main/java/org/example/resources/jobsInfo.json";
+        insertItemsByUsingFile(filePath);
+        ddbClient.close();
     }
 
-    private static AmazonDynamoDB createClient() {
-        AWSCredentialsProvider creds = new AWSStaticCredentialsProvider(new BasicAWSCredentials(credentialProperty.accessKey, credentialProperty.secretKey));
-        AmazonDynamoDB ddbClient = AmazonDynamoDBClientBuilder.standard()
-                .withCredentials(creds)
-                .withRegion(region)
+    public static void createDDBClient() {
+        // Create AWS credentials object with the provided access and secret keys
+        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(CredentialProperties.accessKey, CredentialProperties.secretKey);
+        ddbClient = DynamoDbClient.builder()
+                .region(region)
+                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
                 .build();
-        return ddbClient;
+    }
+    public static void updateItemByJobId(String jobId, String newJobTitle, String newJobDescription) {
+        System.out.println("executing updateItemByPrimaryKey......");
+
+        // Fetch the existing item from DynamoDB
+        GetItemRequest getItemRequest = GetItemRequest.builder()
+                .tableName(tableName)
+                .key(Map.of("jobId", AttributeValue.builder().s(jobId).build()))
+                .build();
+
+        GetItemResponse getItemResponse = ddbClient.getItem(getItemRequest);
+
+        // Check if the item exists and has differences in jobTitle or jobDescription
+        if (getItemResponse.hasItem()) {
+            AttributeValue existingJobTitle = getItemResponse.item().get("jobTitle");
+            AttributeValue existingJobDescription = getItemResponse.item().get("jobDescription");
+
+            boolean jobTitleChanged = !existingJobTitle.s().equals(newJobTitle);
+            boolean jobDescriptionChanged = !existingJobDescription.s().equals(newJobDescription);
+
+            if (jobTitleChanged || jobDescriptionChanged) {
+                UpdateItemRequest updateItemRequest = UpdateItemRequest.builder()
+                        .tableName(tableName)
+                        .key(Map.of("jobId", AttributeValue.builder().s(jobId).build()))
+                        .updateExpression("SET " +
+                                (jobTitleChanged ? "jobTitle = :title, " : "") +
+                                (jobDescriptionChanged ? "jobDescription = :description" : ""))
+                        .conditionExpression("attribute_exists(jobId) AND " +
+                                "(attribute_not_exists(jobTitle) OR jobTitle <> :title) AND " +
+                                "(attribute_not_exists(jobDescription) OR jobDescription <> :description)")
+                        .expressionAttributeValues(Map.of(
+                                ":title", AttributeValue.builder().s(newJobTitle).build(),
+                                ":description", AttributeValue.builder().s(newJobDescription).build()
+                        ))
+                        .build();
+
+                try {
+                    ddbClient.updateItem(updateItemRequest);
+                    System.out.println("Item updated successfully.");
+                } catch (DynamoDbException e) {
+                    System.err.println("Unable to update item: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Values are identical. No update needed.");
+            }
+        } else {
+            System.out.println("Item not found.");
+        }
+
     }
 
-    private static void insertItemsByUsingFile(Table table) {
+
+    public static void deleteItemByJobId(String jobId) {
+        System.out.println("executing deleteItemByPrimaryKey......");
+        DeleteItemRequest deleteItemRequest = DeleteItemRequest.builder()
+                .tableName(tableName)
+                .key(Map.of("jobId", AttributeValue.builder().s(jobId).build()))
+                .build();
+
+        // Delete the item from DynamoDB
+        try {
+            ddbClient.deleteItem(deleteItemRequest);
+            System.out.println("Item deleted successfully. jobId: " + jobId);
+        } catch (DynamoDbException e) {
+            System.err.println("Unable to delete item: " + e.getMessage());
+        }
+    }
+
+    private static void insertItemsByUsingFile(String filePath) {
+        System.out.println("executing insertItemsByUsingFile2......");
         JsonParser parser = null;
         try {
             parser = new JsonFactory()
-                    .createParser(new File("jobsInfo.json"));
+                    //.createParser(new File("jobsInfo.json"));
+                    .createParser(new File(filePath));
             JsonNode rootNode = new ObjectMapper().readTree(parser);
             Iterator<JsonNode> iter = rootNode.iterator();
             ObjectNode currentNode;
-
             while (iter.hasNext()) {
                 currentNode = (ObjectNode) iter.next();
-                int jobId = currentNode.path("jobId").asInt();
+                String jobId = currentNode.path("jobId").asText();
                 String jobTitile = currentNode.path("jobTitle").asText();
                 String jobDescription = currentNode.path("jobDescription").asText();
 
                 try {
-                    insertItem(jobId, jobTitile, jobDescription, table);
-                    System.out.println("Successful load: " + jobId + " " + jobTitile + " " + jobDescription);
+                    insertItem(jobId, jobTitile, jobDescription);
                 } catch (Exception e) {
                     System.err.println("Cannot add product: " + jobId + " " + jobTitile + " " + jobDescription);
                     System.err.println(e.getMessage());
@@ -76,58 +145,27 @@ public class Main {
             System.out.println(e.getMessage());
             throw new RuntimeException(e);
         }
-
-
     }
-    private static void insertItem(int jobId, String jobTitle, String jobDescription, Table table) {
-        try {
-            Item item = new Item()
-                    .withNumber("jobId", jobId)
-                    .withString("jobTitle", jobTitle)
-                    .withString("jobDescription", jobDescription);
-            table.putItem(item);
-            System.out.println("Item created");
-        } catch (Exception e) {
-            System.out.println("Cannot create item");
-            System.out.println(e.getMessage());
-        }
-    }
-    public static boolean isTableExist(String tableName) {
-        try {
-            TableDescription tableDescription = dynamoDB.getTable(tableName).describe();
-            System.out.println("Table description: " + tableDescription.getTableStatus());
-            return true;
-        } catch (com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException rnfe) {
-            System.out.println("Table does not exist");
-        }
-        return false;
+    public static void insertItem(String jobId, String jobTitle, String jobDescription) {
+        System.out.println("insertItem2........");
+        // Create a map of attribute values for the item
+        Map<String, AttributeValue> itemValues = new HashMap<>();
+        itemValues.put("jobId", AttributeValue.builder().s(jobId).build());
+        itemValues.put("jobTitle", AttributeValue.builder().s(jobTitle).build());
+        itemValues.put("jobDescription", AttributeValue.builder().s(jobDescription).build());
 
-    }
+        // Create a PutItemRequest
+        PutItemRequest putItemRequest = PutItemRequest.builder()
+                .tableName("Jobs")
+                .item(itemValues)
+                .build();
 
-    private static Table createTable(String tableName) {
+        // Insert the item into DynamoDB
         try {
-            if (isTableExist(tableName)) {
-                System.out.println("the table is already exists");
-                return dynamoDB.getTable(tableName);
-            }
-            System.out.println("Creating the "  + tableName + " table, wait...");
-            Table table = dynamoDB.createTable (tableName,
-                    Arrays.asList (
-                            new KeySchemaElement("jobId", KeyType.HASH) // the partition key
-                    ),
-                    Arrays.asList (
-                            new AttributeDefinition("jobId", ScalarAttributeType.N)
-                    ),
-                    new ProvisionedThroughput(5L, 5L)
-            );
-            table.waitForActive();
-            System.out.println("Table created successfully.  Status: " +
-                    table.getDescription().getTableStatus());
-            return table;
-        } catch (Exception e) {
-            System.err.println("Cannot create the table: ");
-            System.err.println(e.getMessage());
+            ddbClient.putItem(putItemRequest);
+            System.out.println("Successful load: " + jobId + " " + jobTitle + " " + jobDescription);
+        } catch (DynamoDbException e) {
+            System.err.println("Unable to insert item: " + e.getMessage());
         }
-        return null;
     }
 }

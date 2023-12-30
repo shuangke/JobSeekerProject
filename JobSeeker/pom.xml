@@ -36,11 +36,19 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb -->
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>software.amazon.awssdk</groupId>-->
+<!--            <artifactId>dynamodb</artifactId>-->
+<!--        </dependency>-->
+
+        <!-- https://mvnrepository.com/artifact/software.amazon.awscdk/dynamodb -->
         <dependency>
-            <groupId>software.amazon.awssdk</groupId>
+            <groupId>software.amazon.awscdk</groupId>
             <artifactId>dynamodb</artifactId>
+            <version>1.195.0</version>
         </dependency>
+
 
         <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-dynamodb -->
         <dependency>

@@ -1,26 +1,51 @@
-[{
-  "jobId" : 1,
-  "jobTitle" : "SDE1",
-  "jobDescription" : "More than ever before, cloud services are transforming the way the world does business. As you’ve probably heard, Microsoft is committed to being cloud-first"
-},
+[
   {
-    "jobId" : 2,
-    "jobTitle" : "SDE1",
-    "jobDescription" : "Description  At Relatient we’re on a mission to make access to healthcare simpler. \n"
+    "jobId": "1",
+    "jobTitle": "Software Engineer",
+    "jobDescription": "Designing and developing software applications, systems, and solutions."
   },
   {
-    "jobId" : 3,
-    "jobTitle" : "Software Engineer",
-    "jobDescription" : "Designs, creates, modifies, integrates, tests, or maintains applications, embedded software, engineering/scientific software, web applications, machine learning, and/or artificial intelligence-based software solutions.\nCommunicates with colleagues and more senior developers on technical designs and development."
+    "jobId": "2",
+    "jobTitle": "Data Analyst",
+    "jobDescription": "Analyzing and interpreting data to discover insights and trends."
   },
   {
-    "jobId" : 4,
-    "jobTitle" : "Full Stack Engineer (Java + React)",
-    "jobDescription" : "Full stack Developer Alpharetta, Georgia, United States, Fulltime\nPreferred qualifications"
+    "jobId": "3",
+    "jobTitle": "Product Manager",
+    "jobDescription": "Managing the product lifecycle from ideation to launch."
   },
   {
-    "jobId" : 5,
-    "jobTitle" : "Software Development Engineer - Payroll Accounting",
-    "jobDescription" : "At Workday, it all began with a conversation over breakfast. When our founders met at a sunny California diner, they came up with an idea to revolutionize the enterprise software market. And when we began to rise, one thing that really set us apart was our culture. "
-  }
-]
+    "jobId": "4",
+    "jobTitle": "UX/UI Designer",
+    "jobDescription": "Creating user-centric designs for digital products and experiences."
+  },
+  {
+    "jobId": "5",
+    "jobTitle": "Network Engineer",
+    "jobDescription": "Designing and implementing network solutions and configurations."
+  },
+  {
+    "jobId": "6",
+    "jobTitle": "Financial Analyst",
+    "jobDescription": "Analyzing financial data and providing insights for decision-making."
+  },
+  {
+    "jobId": "7",
+    "jobTitle": "Marketing Manager",
+    "jobDescription": "Developing and executing marketing strategies and campaigns."
+  },
+  {
+    "jobId": "8",
+    "jobTitle": "Front-end Developer",
+    "jobDescription": "Building interactive user interfaces using HTML, CSS, and JavaScript."
+  },
+  {
+    "jobId": "9",
+    "jobTitle": "HR Manager",
+    "jobDescription": "Overseeing human resources operations and policies."
+  },
+  {
+    "jobId": "10",
+    "jobTitle": "Business Analyst",
+    "jobDescription": "Analyzing business processes and recommending improvements."
+  }]
