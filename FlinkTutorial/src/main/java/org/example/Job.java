@@ -15,4 +15,5 @@ public class Job {
     private String jobTitle;
     private String jobDescription;
     private String searchableContent;
+    private String eventId;
 }

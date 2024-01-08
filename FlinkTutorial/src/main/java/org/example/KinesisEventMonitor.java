@@ -17,13 +17,12 @@ public class KinesisEventMonitor {
         properties.setProperty(AWSConfigConstants.AWS_REGION, "us-west-2");
         properties.setProperty(AWSConfigConstants.AWS_ACCESS_KEY_ID, CredentialProperties.accessKey);
         properties.setProperty(AWSConfigConstants.AWS_SECRET_ACCESS_KEY, CredentialProperties.secretKey);
-
         DataStream<String> stream = env.addSource(new FlinkKinesisConsumer<>(
-                "JobSeekerKinesis", new SimpleStringSchema(), properties));
+                "jobRunner", new SimpleStringSchema(), properties));
         SingleOutputStreamOperator<Job> kinesisStreamReconstructToJobObjectStream = stream.map(new JobParserMap());
         SingleOutputStreamOperator<Job> jobStreamAfterNomalization = kinesisStreamReconstructToJobObjectStream.map(new JobSearchableContentNormalizationMap());
-        //jobStreamAfterNomalization.sinkTo();
         jobStreamAfterNomalization.print();
+        jobStreamAfterNomalization.addSink(new LuceneIndexSink()).setParallelism(1);
         env.execute("Kinesis Flink Job");
     }
 }

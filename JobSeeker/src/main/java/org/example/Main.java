@@ -121,7 +121,6 @@ public class Main {
         JsonParser parser = null;
         try {
             parser = new JsonFactory()
-                    //.createParser(new File("jobsInfo.json"));
                     .createParser(new File(filePath));
             JsonNode rootNode = new ObjectMapper().readTree(parser);
             Iterator<JsonNode> iter = rootNode.iterator();
@@ -147,7 +146,7 @@ public class Main {
         }
     }
     public static void insertItem(String jobId, String jobTitle, String jobDescription) {
-        System.out.println("insertItem2........");
+        System.out.println("insertItem........");
         // Create a map of attribute values for the item
         Map<String, AttributeValue> itemValues = new HashMap<>();
         itemValues.put("jobId", AttributeValue.builder().s(jobId).build());
@@ -156,7 +155,7 @@ public class Main {
 
         // Create a PutItemRequest
         PutItemRequest putItemRequest = PutItemRequest.builder()
-                .tableName("Jobs")
+                .tableName(tableName)
                 .item(itemValues)
                 .build();
 

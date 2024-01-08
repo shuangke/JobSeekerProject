@@ -30,7 +30,7 @@ public class JobParserMap implements MapFunction<String, Job> {
         String jobDescription = attributes.get("jobDescription").getS();
         String searchableContent = jobTitle + jobDescription;
         System.out.println("successfully pased a job, jobId: " + jobId + ", jobTitle " +
-                jobTitle + " jobDescription " + jobDescription);
-        return new Job(jobId, jobTitle, jobDescription, searchableContent);
+                jobTitle + " jobDescription " + jobDescription + "eventId " + eventId);
+        return new Job(jobId, jobTitle, jobDescription, searchableContent, eventId);
     }
 }
